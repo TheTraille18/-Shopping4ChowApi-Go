@@ -2,20 +2,13 @@ pipeline {
   agent any
   stages {
     stage('Build') {
-      parallel {
-        stage('Build') {
-          steps {
-            sh 'echo \'Compiling and building\''
-          }
-        }
+      steps {
+        sh '''echo \'Compiling and building\'
 
-        stage('error') {
-          steps {
-            sh '''sh \'go build\'
+
 '''
-          }
-        }
-
+        sh 'ls'
+        sh 'pwd'
       }
     }
 
