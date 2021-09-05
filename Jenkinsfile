@@ -1,15 +1,15 @@
 pipeline {
   agent any
   stages {
-    stage('Bduil') {
+    stage('Build') {
       parallel {
-        stage('Bduil') {
+        stage('Build') {
           steps {
             sh 'echo \'Compiling and building\''
           }
         }
 
-        stage('') {
+        stage('error') {
           steps {
             sh '''sh \'go build\'
 '''
