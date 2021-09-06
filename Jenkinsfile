@@ -33,6 +33,10 @@ pipeline {
     GO114MODULE = 'on'
     CGO_ENABLED = 0
     GOPATH = "${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_ID}"
+    S4C_HOST = 'localhost'
+    S4C_DATABASE = 'postgres'
+    S4C_USERNAME = 'postgres'
+    S4C_PASSWORD = 'postgres'
   }
   post {
     always {
