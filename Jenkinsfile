@@ -7,8 +7,8 @@ pipeline {
 
 
 '''
-        sh 'ls'
-        sh 'pwd'
+        sh 'cd cmd/shopping4chow/'
+        sh 'go build .'
       }
     }
 
@@ -22,6 +22,8 @@ sh \'go vet .\'
                     sh \'golint .\'
                     echo \'Running test\'
                     sh \'cd test && go test -v\''''
+        sh 'cd dao'
+        sh 'go test -v'
       }
     }
 
