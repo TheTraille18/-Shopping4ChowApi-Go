@@ -5,7 +5,6 @@ pipeline {
       steps {
         echo 'Installing dependencies'
         sh 'go version'
-        sh 'sh \'go get -u golang.org/x/lint/golint\''
       }
     }
 
@@ -19,10 +18,6 @@ pipeline {
     stage('Test') {
       steps {
         withEnv(overrides: ["PATH+GO=${GOPATH}/bin"]) {
-          echo 'Running vetting'
-          sh 'go vet .'
-          echo 'Running linting'
-          sh 'golint .'
           echo 'Running test'
           sh 'cd cmd/shopping4chow/dao/ && go test -v'
         }
