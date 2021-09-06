@@ -15,10 +15,12 @@ import (
 
 var conn *pgx.Conn
 
+var host string = "localhost"
+
 func TestMain(m *testing.M) {
 	// 0. flag.Parse() if you need flags
 
-	url := "postgresql://" + "postgres" + ":" + "postgres" + "@" + "192.168.1.114" + ":5432/" + "postgres"
+	url := "postgresql://" + "postgres" + ":" + "postgres" + "@" + "localhost" + ":5432/" + "postgres"
 	pgxConn, connErr := pgx.Connect(context.Background(), url)
 	if connErr != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database2: %v\n", connErr)
@@ -55,22 +57,6 @@ func importSQL() {
 		log.Fatalf("Error loading Test Data %v\n", err)
 	}
 }
-
-// func TestUserStore(t *testing.T) {
-// 	db, err := sql.Open("postgres", "host=192.168.1.114 port=5432 user=postgres password=postgres sslmode=disable dbname=test_user_store")
-// 	if err != nil {
-// 		panic(fmt.Errorf("sql.Open() err = %s", err))
-// 	}
-// 	defer db.Close()
-// 	us := &UserStore{
-// 		sql: db,
-// 	}
-// 	t.Run("Find", testUserStore_Find(us))
-// 	t.Run("Create", testUserStore_Find(us))
-// 	t.Run("Delete", testUserStore_Find(us))
-// 	t.Run("Subscribe", testUserStore_Find(us))
-// 	// teardown
-// }
 
 func TestIngredient_Get(t *testing.T) {
 	arg1 := "Fake"
