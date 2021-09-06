@@ -2,21 +2,23 @@ package service
 
 import (
 	"fmt"
-	"shopping4chow/internal/dao"
-	"shopping4chow/internal/models"
+	"shopping4chow/cmd/shopping4chow/dao"
+	"shopping4chow/cmd/shopping4chow/models"
+
+	"github.com/jackc/pgx/v4"
 )
 
 type IngredientServiceImpl struct {
 	IngredientDAO dao.IngredientDao
 }
 
-func NewService(dao dao.IngredientDao) *IngredientServiceImpl {
+func NewIngredientService(dao dao.IngredientDao) *IngredientServiceImpl {
 	return &IngredientServiceImpl{IngredientDAO: dao}
 }
 
 //Get Ingredient from text entered in search bar
-func (i IngredientServiceImpl) GetIngredient(ingredient models.Ingredient) []models.Ingredient {
-	ingredients := i.IngredientDAO.GetIngredient(ingredient)
+func (i IngredientServiceImpl) GetIngredient(conn *pgx.Conn, ingredient models.Ingredient) []models.Ingredient {
+	ingredients := i.IngredientDAO.GetIngredient(conn, ingredient)
 	return ingredients
 }
 
