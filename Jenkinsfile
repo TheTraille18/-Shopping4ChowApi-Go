@@ -7,8 +7,7 @@ pipeline {
 
 
 '''
-        sh 'cd cmd/shopping4chow/'
-        sh 'go build .'
+        sh 'ls'
       }
     }
 
