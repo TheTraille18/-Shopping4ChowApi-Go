@@ -6,17 +6,31 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"shopping4chow/internal/dao"
-	"shopping4chow/internal/models"
-	"shopping4chow/internal/service"
+	"shopping4chow/cmd/shopping4chow/dao"
+	"shopping4chow/cmd/shopping4chow/models"
+	"shopping4chow/cmd/shopping4chow/service"
+	config "shopping4chow/configs"
 )
 
 var ingredientDao dao.IngredientDao
 var ingredientSvc service.IngredientService
 
+var mealDao dao.MealDao
+var mealSvc service.MealService
+
+var recipeDao dao.RecipeDao
+var recipeSvc service.RecipeService
+
 func init() {
-	ingredientDao = dao.NewDAO()
-	ingredientSvc = service.NewService(ingredientDao)
+
+	ingredientDao = dao.NewIngredientDAO()
+	ingredientSvc = service.NewIngredientService(ingredientDao)
+
+	recipeDao = dao.NewRecipeDAO()
+	recipeSvc = service.NewRecipeService(recipeDao)
+
+	mealDao = dao.NewMealDAO()
+	mealSvc = service.NewMealService(mealDao)
 }
 
 func addIngredient(w http.ResponseWriter, r *http.Request) {
@@ -83,26 +97,54 @@ func getIngredient(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		ingredients := ingredientSvc.GetIngredient(searchIngredient)
+		ingredients := ingredientSvc.GetIngredient(config.Conn, searchIngredient)
 		ingredientsJson, errJson := json.Marshal(ingredients)
 		if errJson != nil {
-			fmt.Println(errJson)
+			log.Println(errJson)
 		}
-		fmt.Println(string(ingredientsJson))
+		log.Println(string(ingredientsJson))
 		w.Write(ingredientsJson)
 	}
 	//fmt.Println(ingredient.GetName())
+}
 
+func addMeal(w http.ResponseWriter, r *http.Request) {
+
+	//Headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+	var meal models.Meal
+
+	if r.Method == "POST" {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Error reading request body",
+				http.StatusInternalServerError)
+		}
+		//fmt.Printf("Body", string(body))
+
+		err = json.Unmarshal(body, &meal)
+		if err != nil {
+			log.Println(err)
+		}
+		log.Printf("Meal %+v\n", meal)
+
+		mealSvc.AddMeal(meal)
+
+	}
 }
 
 func handleRequest() {
 	http.HandleFunc("/addingredient", addIngredient)
 	http.HandleFunc("/getIngredients", getIngredient)
 	http.HandleFunc("/removeIngredient", removeIngredient)
+	http.HandleFunc("/addmeal", addMeal)
 	log.Fatal(http.ListenAndServe(":10000", nil))
 }
 
 func main() {
-	fmt.Println("Running")
+	log.Println("Running")
 	handleRequest()
 }

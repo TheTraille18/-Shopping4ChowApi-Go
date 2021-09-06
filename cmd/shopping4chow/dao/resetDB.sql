@@ -1,0 +1,9 @@
+-- Database: shopping4chow
+
+-- DROP DATABASE shopping4chow;
+DROP TABLE IF EXISTS meal CASCADE;
+DROP TABLE IF EXISTS ingredient CASCADE;
+DROP TABLE IF EXISTS recipe CASCADE;
+DROP TABLE IF EXISTS shoppinglist CASCADE;
+DROP TABLE IF EXISTS meal_pics CASCADE;
+DROP TYPE IF EXISts unit;

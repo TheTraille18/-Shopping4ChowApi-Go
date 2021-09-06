@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"shopping4chow/internal/models"
+	"shopping4chow/cmd/shopping4chow/models"
+	config "shopping4chow/configs"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/jackc/pgx/v4"
 )
@@ -16,35 +15,23 @@ import (
 type IngredientDaoImpl struct {
 }
 
-var svc *s3.S3
-var conn *pgx.Conn
-var connErr error
-
 func init() {
-	svc = s3.New(session.New(), aws.NewConfig().WithRegion("us-east-1"))
-	host := os.Getenv("S4C_HOST")
-	database := os.Getenv("S4C_DATABASE")
-	user := os.Getenv("S4C_USERNAME")
-	password := os.Getenv("S4C_PASSWORD")
-	fmt.Printf("Host %s\n", host)
-	fmt.Printf("Database %s\n", database)
-	url := "postgresql://" + user + ":" + password + "@" + host + ":5432/" + database
-	conn, connErr = pgx.Connect(context.Background(), url)
-	if connErr != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", connErr)
-	}
+
 	//defer conn.Close(context.Background())
+
 }
 
-func NewDAO() *IngredientDaoImpl {
+func NewIngredientDAO() *IngredientDaoImpl {
 	return &IngredientDaoImpl{}
 }
 
-func (i *IngredientDaoImpl) GetIngredient(ingredient models.Ingredient) []models.Ingredient {
-	fmt.Printf("search for %s\n", ingredient.Name)
+func (i *IngredientDaoImpl) GetIngredient(conn *pgx.Conn, ingredient models.Ingredient) []models.Ingredient {
+	//fmt.Printf()
+	log.Printf("Searching for for %s\n", ingredient.Name)
 	var ingredients []models.Ingredient
 	rows, err := conn.Query(context.Background(), "select id,name,s3key from ingredient where name like $1", ingredient.Name+"%")
 	if err != nil {
+		fmt.Println("Error in select")
 		fmt.Println(err)
 	}
 	for rows.Next() {
@@ -66,11 +53,11 @@ func (i *IngredientDaoImpl) RemoveIngredient(ingredient models.Ingredient) {
 		Bucket: aws.String("shopping4chow.com"),
 		Key:    aws.String("local/" + ingredient.S3Key),
 	}
-	_, err := svc.DeleteObject(input)
+	_, err := config.Svc.DeleteObject(input)
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, sqlErr := conn.Exec(context.Background(), "delete from ingredient where id=$1", ingredient.Id)
+	_, sqlErr := config.Conn.Exec(context.Background(), "delete from ingredient where id=$1", ingredient.Id)
 	if sqlErr != nil {
 		fmt.Println(sqlErr)
 	}
@@ -82,9 +69,10 @@ func (i *IngredientDaoImpl) GetAllIngredients() []models.Ingredient {
 
 func (i *IngredientDaoImpl) AddIngredient(ingredient models.Ingredient) {
 	var nameExists string
-	conn.QueryRow(context.Background(), "select name from ingredient where name=$1", ingredient.Name).Scan(&nameExists)
+	config.Conn.QueryRow(context.Background(), "select name from ingredient where name=$1", ingredient.Name).Scan(&nameExists)
 	if nameExists != "" {
 		fmt.Printf("Name %s exists\n", nameExists)
+		return
 	}
 
 	input := &s3.PutObjectInput{
@@ -92,11 +80,11 @@ func (i *IngredientDaoImpl) AddIngredient(ingredient models.Ingredient) {
 		Bucket: aws.String("shopping4chow.com"),
 		Key:    aws.String("local/" + ingredient.S3Key),
 	}
-	_, err := svc.PutObject(input)
+	_, err := config.Svc.PutObject(input)
 	if err != nil {
 		log.Fatal(err)
 	}
-	flag, sqlErr := conn.Exec(context.Background(), "insert into ingredient (name,s3key) values ($1,$2)", ingredient.Name, ingredient.S3Key)
+	flag, sqlErr := config.Conn.Exec(context.Background(), "insert into ingredient (name,s3key) values ($1,$2)", ingredient.Name, ingredient.S3Key)
 	if sqlErr != nil {
 		fmt.Println(sqlErr)
 	}
