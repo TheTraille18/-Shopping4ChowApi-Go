@@ -9,6 +9,7 @@ pipeline {
 '''
         sh 'ls'
         sh 'cd cmd'
+        sh 'cd shopping4chow'
       }
     }
 
