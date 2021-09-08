@@ -115,25 +115,78 @@ func addMeal(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
-	var meal models.Meal
+	err := r.ParseMultipartForm(200000000)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	if r.Method == "POST" {
+	var meal models.Meal
+	m := r.MultipartForm.Value["meal"][0]
+	fileHeader := r.MultipartForm.File["file"][0]
+	file, err := fileHeader.Open()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(file)
+
+	err = json.Unmarshal([]byte(m), &meal)
+	if err != nil {
+		log.Println(err)
+	}
+	meal.File = file
+	mealSvc.AddMeal(meal)
+
+	//var meal models.Meal
+	/*
+		if r.Method == "POST" {
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, "Error reading request body",
+					http.StatusInternalServerError)
+			}
+			fmt.Printf("Body %s\n", string(body))
+
+			err = json.Unmarshal(body, &meal)
+			if err != nil {
+				log.Println(err)
+			}
+			log.Printf("Meal created %+v\n", meal)
+
+			mealSvc.AddMeal(meal)
+
+		}
+	*/
+}
+
+func getMeal(w http.ResponseWriter, r *http.Request) {
+
+	//Headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+	if r.Method == "POST" { //Request sends both an OPTIONS and POST
+		var searchMeal models.Meal
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Error reading request body",
 				http.StatusInternalServerError)
 		}
-		//fmt.Printf("Body", string(body))
-
-		err = json.Unmarshal(body, &meal)
+		fmt.Printf("Meal Body: %s\n", string(body))
+		err = json.Unmarshal(body, &searchMeal)
 		if err != nil {
-			log.Println(err)
+			fmt.Println(err)
 		}
-		log.Printf("Meal %+v\n", meal)
-
-		mealSvc.AddMeal(meal)
-
+		meals := mealSvc.GetMeal(config.Conn, searchMeal)
+		mealsJson, errJson := json.Marshal(meals)
+		if errJson != nil {
+			log.Println(errJson)
+		}
+		log.Printf("Meals %s", string(mealsJson))
+		w.Write(mealsJson)
 	}
+	//fmt.Println(ingredient.GetName())
 }
 
 func handleRequest() {
@@ -141,6 +194,7 @@ func handleRequest() {
 	http.HandleFunc("/getIngredients", getIngredient)
 	http.HandleFunc("/removeIngredient", removeIngredient)
 	http.HandleFunc("/addmeal", addMeal)
+	http.HandleFunc("/getMeals", getMeal)
 	log.Fatal(http.ListenAndServe(":10000", nil))
 }
 
