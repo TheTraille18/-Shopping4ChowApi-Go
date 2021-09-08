@@ -1,5 +1,7 @@
 package models
 
+import "mime/multipart"
+
 type Meal struct {
 	ID         int      `json:"id"`
 	User       string   `json:"user"`
@@ -8,4 +10,5 @@ type Meal struct {
 	PicId      string   `json:"picId"`
 	RecipeText string   `json:"RecipeText"`
 	Website    string   `json:"website"`
+	File       multipart.File
 }
