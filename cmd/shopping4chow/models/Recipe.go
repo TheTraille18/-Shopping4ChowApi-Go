@@ -35,7 +35,7 @@ type Recipe struct {
 	Id            int    `json:"id"`
 	Meal_id       int    `json:"meal"`
 	Name          string `json:"name"`
-	Ingredient_id int    `json:"ingredients"`
+	Ingredient_id int    `json:"ingredientId"`
 	Amount        int    `json:"amount"`
 	Units         Unit   `json:"unit"`
 }
