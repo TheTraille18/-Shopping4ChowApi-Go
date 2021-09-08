@@ -23,5 +23,5 @@ func (r RecipeServiceImpl) GetAllRecipes() []models.Recipe {
 	return nil
 }
 func (r RecipeServiceImpl) AddRecipe(recipe models.Recipe) {
-	r.AddRecipe(recipe)
+	r.RecipeDao.AddRecipe(recipe)
 }
