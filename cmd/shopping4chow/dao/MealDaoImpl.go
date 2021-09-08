@@ -3,8 +3,13 @@ package dao
 import (
 	"context"
 	"fmt"
+	"log"
 	"shopping4chow/cmd/shopping4chow/models"
 	config "shopping4chow/configs"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/jackc/pgx/v4"
 )
 
 type MealDaoImpl struct {
@@ -14,8 +19,45 @@ func NewMealDAO() MealDaoImpl {
 	return MealDaoImpl{}
 }
 
-func (m MealDaoImpl) GetMeal(findMeal models.Meal) []models.Meal {
-	return nil
+func (m MealDaoImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal {
+	log.Printf("Searching for %s\n", findMeal.Name)
+	var meals []models.Meal
+
+	haveMeal := make(map[string]*models.Meal)
+	//rows, err := conn.Query(context.Background(), "select id,name from ingredient where name like $1", findMeal.Name+"%")
+	rows, err := conn.Query(context.Background(), "select meal.name,recipe.id, recipe.amount, recipe.name, recipe.units from recipe join meal on recipe.meal_id = meal.id where meal.name like $1", findMeal.Name+"%")
+
+	if err != nil {
+		fmt.Println("Error in select")
+		fmt.Println(err)
+	}
+
+	for rows.Next() {
+		var meal models.Meal
+		var mealName string
+		var recipeName string
+		var id int
+		var amount int
+		var units int
+		rows.Scan(&mealName, &id, &amount, &recipeName, &units)
+		m, mealExists := haveMeal[mealName]
+
+		if mealExists {
+			recipe := models.Recipe{Name: recipeName, Amount: amount}
+			m.Recipes = append(m.Recipes, recipe)
+		} else {
+			meal.Name = mealName
+			recipe := models.Recipe{Name: recipeName, Amount: amount}
+			meal.Recipes = append(meal.Recipes, recipe)
+			haveMeal[mealName] = &meal
+		}
+
+	}
+	for key := range haveMeal {
+		log.Printf("Meal Name %s\n", key)
+		meals = append(meals, *haveMeal[key])
+	}
+	return meals
 }
 
 func (m MealDaoImpl) RemoveMeal(Meal models.Meal) {
@@ -34,6 +76,17 @@ func (m MealDaoImpl) AddMeal(meal models.Meal) int {
 		return -1
 	}
 
+	input := &s3.PutObjectInput{
+		Body:   meal.File,
+		Bucket: aws.String("shopping4chow.com"),
+		Key:    aws.String("local/Meal/" + meal.Name + ".png"),
+	}
+
+	_, err := config.Svc.PutObject(input)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// input := &s3.PutObjectInput{
 	// 	Body:   ingredient.File,
 	// 	Bucket: aws.String("shopping4chow.com"),
@@ -45,7 +98,5 @@ func (m MealDaoImpl) AddMeal(meal models.Meal) int {
 	// }
 	var id int
 	config.Conn.QueryRow(context.Background(), "insert into meal (name) values ($1) returning id", meal.Name).Scan(&id)
-	fmt.Println(id)
-	fmt.Println("***********************************************")
 	return id
 }
