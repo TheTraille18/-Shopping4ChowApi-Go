@@ -34,7 +34,10 @@ func init() {
 }
 
 func addIngredient(w http.ResponseWriter, r *http.Request) {
-	//fmt.Println(w)
+	//Headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
 	err := r.ParseMultipartForm(200000000)
 	if err != nil {
@@ -52,7 +55,13 @@ func addIngredient(w http.ResponseWriter, r *http.Request) {
 
 	s3Key := ingredient.Name + ".png"
 	ingredient.S3Key = s3Key
-	ingredientSvc.AddIngredient(ingredient)
+
+	err = ingredientSvc.AddIngredient(ingredient)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte("Ingredient already Exists"))
+	}
+	w.WriteHeader(200)
 }
 
 func removeIngredient(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +129,12 @@ func addMeal(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
+	//Struct to unmarshal into
 	var meal models.Meal
+	user := struct {
+		User string `json:"user"`
+	}{}
+
 	m := r.MultipartForm.Value["meal"][0]
 	fileHeader := r.MultipartForm.File["file"][0]
 	file, err := fileHeader.Open()
@@ -128,14 +142,18 @@ func addMeal(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	fmt.Println(file)
-
 	err = json.Unmarshal([]byte(m), &meal)
 	if err != nil {
 		log.Println(err)
 	}
+
+	err = json.Unmarshal([]byte(m), &user)
+	if err != nil {
+		log.Println(err)
+	}
+
 	meal.File = file
-	mealSvc.AddMeal(meal)
+	mealSvc.AddMeal(user.User, meal)
 
 	//var meal models.Meal
 	/*
