@@ -27,8 +27,8 @@ func (m MealServiceImpl) RemoveMeal(meal models.Meal) {
 func (m MealServiceImpl) GetAllMeals() []models.Meal {
 	return nil
 }
-func (m MealServiceImpl) AddMeal(meal models.Meal) {
-	id := m.MealDao.AddMeal(meal)
+func (m MealServiceImpl) AddMeal(user string, meal models.Meal) {
+	id := m.MealDao.AddMeal(user, meal)
 	recipeDao := dao.NewRecipeDAO()
 	recipeSVC := NewRecipeService(recipeDao)
 

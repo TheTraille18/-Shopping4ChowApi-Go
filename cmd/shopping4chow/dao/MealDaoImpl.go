@@ -25,7 +25,7 @@ func (m MealDaoImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 
 	haveMeal := make(map[string]*models.Meal)
 	//rows, err := conn.Query(context.Background(), "select id,name from ingredient where name like $1", findMeal.Name+"%")
-	rows, err := conn.Query(context.Background(), "select meal.name,recipe.id, recipe.amount, recipe.name, recipe.units from recipe join meal on recipe.meal_id = meal.id where meal.name like $1", findMeal.Name+"%")
+	rows, err := conn.Query(context.Background(), "select meal.name,recipe.id, recipe.amount, recipe.name from recipe join meal on recipe.meal_id = meal.id where meal.name like $1", findMeal.Name+"%")
 
 	if err != nil {
 		fmt.Println("Error in select")
@@ -33,13 +33,14 @@ func (m MealDaoImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 	}
 
 	for rows.Next() {
+
+		log.Println(1)
 		var meal models.Meal
 		var mealName string
 		var recipeName string
 		var id int
 		var amount int
-		var units int
-		rows.Scan(&mealName, &id, &amount, &recipeName, &units)
+		rows.Scan(&mealName, &id, &amount, &recipeName)
 		m, mealExists := haveMeal[mealName]
 
 		if mealExists {
@@ -52,6 +53,10 @@ func (m MealDaoImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 			haveMeal[mealName] = &meal
 		}
 
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Println(err)
 	}
 	for key := range haveMeal {
 		log.Printf("Meal Name %s\n", key)
@@ -68,7 +73,7 @@ func (m MealDaoImpl) GetAllMeals() []models.Meal {
 	return nil
 }
 
-func (m MealDaoImpl) AddMeal(meal models.Meal) int {
+func (m MealDaoImpl) AddMeal(username string, meal models.Meal) int {
 	var nameExists string
 	config.Conn.QueryRow(context.Background(), "select name from meal where name=$1", meal.Name).Scan(&nameExists)
 	if nameExists != "" {
@@ -98,5 +103,9 @@ func (m MealDaoImpl) AddMeal(meal models.Meal) int {
 	// }
 	var id int
 	config.Conn.QueryRow(context.Background(), "insert into meal (name) values ($1) returning id", meal.Name).Scan(&id)
+	_, err = config.Conn.Exec(context.Background(), "insert into user_join_meal(user_name,meal_id) values ($1,$2)", "DEV", id)
+	if err != nil {
+		log.Println(err)
+	}
 	return id
 }

@@ -10,5 +10,5 @@ type MealService interface {
 	GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 	RemoveMeal(meal models.Meal)
 	GetAllMeals() []models.Meal
-	AddMeal(meal models.Meal)
+	AddMeal(user string, meal models.Meal)
 }

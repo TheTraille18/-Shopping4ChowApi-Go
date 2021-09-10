@@ -10,5 +10,5 @@ type MealDao interface {
 	GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 	RemoveMeal(Meal models.Meal)
 	GetAllMeals() []models.Meal
-	AddMeal(Meal models.Meal) int
+	AddMeal(userName string, Meal models.Meal) int
 }
