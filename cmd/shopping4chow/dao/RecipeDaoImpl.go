@@ -26,10 +26,9 @@ func (r RecipeDaoImpl) GetAllRecipes() []models.Recipe {
 }
 func (r RecipeDaoImpl) AddRecipe(recipe models.Recipe) {
 	log.Println("Adding recipe")
-	fmt.Println(recipe)
 
 	_, err := config.Conn.Exec(context.Background(), "insert into recipe (amount, name, units, ingredient_id, meal_id) values ($1,$2,$3,$4,$5)", recipe.Amount,
-		recipe.Name, recipe.Units, recipe.Ingredient_id, recipe.Meal_id)
+		recipe.Name, "none", recipe.Ingredient_id, recipe.Meal_id)
 	if err != nil {
 		fmt.Println(err)
 	}
