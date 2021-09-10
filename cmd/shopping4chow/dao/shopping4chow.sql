@@ -7,9 +7,21 @@ DROP TABLE IF EXISTS recipe CASCADE;
 DROP TABLE IF EXISTS shoppinglist CASCADE;
 DROP TABLE IF EXISTS meal_pics CASCADE;
 DROP TYPE IF EXISts unit;
+DROP TABLE IF EXISTS user_join_meal;
+DROP TABLE IF EXISTS user_profile;
+
+CREATE TABLE user_profile (
+	user_name TEXT,
+	email TEXT,
+	PRIMARY KEY(user_name)
+);
+
+-- For Development Environment--
+INSERT INTO user_profile(user_name,email) VALUES ('DEV','test@gmail.com');
+
 
 CREATE TABLE meal (
-	id	INTEGER,
+	id SERIAL,
 	name	TEXT NOT NULL,
 	pic_id	INTEGER,
 	description	TEXT,
@@ -17,8 +29,14 @@ CREATE TABLE meal (
 	PRIMARY KEY(id)
 );
 
+CREATE TABLE user_join_meal (
+	user_name TEXT REFERENCES user_profile (user_name) ON DELETE CASCADE,
+	meal_id int REFERENCES meal (id) ON DELETE CASCADE,
+	CONSTRAINT id PRIMARY KEY (user_name,meal_id)
+);
+
 CREATE TABLE ingredient (
-	id	INTEGER,
+	id	SERIAL,
 	name	VARCHAR(50) NOT NULL,
 	s3key	VARCHAR(50),
 	preferred_store VARCHAR(50),
@@ -29,7 +47,7 @@ CREATE TYPE unit AS ENUM ('none', 'each', 'peice', 'bag', 'bottle', 'box', 'case
 	'dozen', 'small', 'large', 'lbs', 'qt', 'oz', 'cup', 'gallon', 'tbsp', 'tsp', 'g', 'kg','liter', 'milliliter','pis');
 
 CREATE TABLE recipe (
-	id	INTEGER,
+	id	SERIAL,
 	meal_id	INTEGER NOT NULL,
 	name	TEXT NOT NULL,
 	ingredient_id	INTEGER,
