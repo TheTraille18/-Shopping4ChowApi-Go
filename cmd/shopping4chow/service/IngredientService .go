@@ -10,5 +10,5 @@ type IngredientService interface {
 	GetIngredient(conn *pgx.Conn, findIngredients models.Ingredient) []models.Ingredient
 	RemoveIngredient(ingredient models.Ingredient)
 	GetAllIngredients() []models.Ingredient
-	AddIngredient(ingredient models.Ingredient)
+	AddIngredient(ingredient models.Ingredient) error
 }

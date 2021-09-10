@@ -30,7 +30,11 @@ func (i IngredientServiceImpl) GetAllIngredients() []models.Ingredient {
 	return nil
 }
 
-func (i IngredientServiceImpl) AddIngredient(ingredient models.Ingredient) {
+func (i IngredientServiceImpl) AddIngredient(ingredient models.Ingredient) error {
 	fmt.Println(ingredient.Name)
-	i.IngredientDAO.AddIngredient(ingredient)
+	err := i.IngredientDAO.AddIngredient(ingredient)
+	if err != nil {
+		return err
+	}
+	return nil
 }

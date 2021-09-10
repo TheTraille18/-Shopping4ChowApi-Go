@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"shopping4chow/cmd/shopping4chow/models"
@@ -67,12 +68,12 @@ func (i *IngredientDaoImpl) GetAllIngredients() []models.Ingredient {
 	return nil
 }
 
-func (i *IngredientDaoImpl) AddIngredient(ingredient models.Ingredient) {
+func (i *IngredientDaoImpl) AddIngredient(ingredient models.Ingredient) error {
 	var nameExists string
 	config.Conn.QueryRow(context.Background(), "select name from ingredient where name=$1", ingredient.Name).Scan(&nameExists)
 	if nameExists != "" {
 		fmt.Printf("Name %s exists\n", nameExists)
-		return
+		return errors.New("Ingredient Already Exists")
 	}
 
 	input := &s3.PutObjectInput{
@@ -83,12 +84,14 @@ func (i *IngredientDaoImpl) AddIngredient(ingredient models.Ingredient) {
 	_, err := config.Svc.PutObject(input)
 	if err != nil {
 		log.Fatal(err)
+		return err
 	}
+
 	flag, sqlErr := config.Conn.Exec(context.Background(), "insert into ingredient (name,s3key) values ($1,$2)", ingredient.Name, ingredient.S3Key)
 	if sqlErr != nil {
-		fmt.Println(sqlErr)
+		return sqlErr
 	}
 	fmt.Println(flag.RowsAffected())
-
+	return nil
 	//fmt.Printf("Result: %s", ingredient.GetName())
 }
