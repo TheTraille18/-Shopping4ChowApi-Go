@@ -56,7 +56,7 @@ CREATE TABLE recipe (
 	PRIMARY KEY(id),
 		CONSTRAINT fk_meal_id
 		FOREIGN KEY(meal_id)
-			REFERENCES meal(id),
+			REFERENCES meal(id)  ON DELETE CASCADE,
 	CONSTRAINT fk_ingredient_id
 		FOREIGN KEY(ingredient_id)
 			REFERENCES ingredient(id)

@@ -8,7 +8,7 @@ import (
 
 type MealService interface {
 	GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
-	RemoveMeal(meal models.Meal)
+	RemoveMeal(id int) error
 	GetAllMeals() []models.Meal
-	AddMeal(user string, meal models.Meal)
+	AddMeal(user string, meal models.Meal) error
 }

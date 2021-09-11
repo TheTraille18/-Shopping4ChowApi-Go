@@ -153,7 +153,11 @@ func addMeal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	meal.File = file
-	mealSvc.AddMeal(user.User, meal)
+	err = mealSvc.AddMeal(user.User, meal)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+	}
 
 	//var meal models.Meal
 	/*
@@ -175,6 +179,41 @@ func addMeal(w http.ResponseWriter, r *http.Request) {
 
 		}
 	*/
+}
+
+func removeMeal(w http.ResponseWriter, r *http.Request) {
+
+	//Headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+	if r.Method == "POST" {
+
+		MealID := struct {
+			Id int `json:"id"`
+		}{}
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+		}
+
+		err = json.Unmarshal([]byte(body), &MealID)
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+		}
+
+		err = mealSvc.RemoveMeal(MealID.Id)
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte(err.Error()))
+		}
+
+		w.WriteHeader(200)
+	}
 }
 
 func getMeal(w http.ResponseWriter, r *http.Request) {
@@ -213,6 +252,7 @@ func handleRequest() {
 	http.HandleFunc("/removeIngredient", removeIngredient)
 	http.HandleFunc("/addmeal", addMeal)
 	http.HandleFunc("/getMeals", getMeal)
+	http.HandleFunc("/removeMeal", removeMeal)
 	log.Fatal(http.ListenAndServe(":10000", nil))
 }
 

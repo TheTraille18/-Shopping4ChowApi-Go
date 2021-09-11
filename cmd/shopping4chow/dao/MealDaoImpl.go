@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"shopping4chow/cmd/shopping4chow/models"
@@ -25,7 +26,7 @@ func (m MealDaoImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 
 	haveMeal := make(map[string]*models.Meal)
 	//rows, err := conn.Query(context.Background(), "select id,name from ingredient where name like $1", findMeal.Name+"%")
-	rows, err := conn.Query(context.Background(), "select meal.name,recipe.id, recipe.amount, recipe.name from recipe join meal on recipe.meal_id = meal.id where meal.name like $1", findMeal.Name+"%")
+	rows, err := conn.Query(context.Background(), "select meal.name,recipe.id, recipe.amount, recipe.meal_id, recipe.name from recipe join meal on recipe.meal_id = meal.id where meal.name like $1", findMeal.Name+"%")
 
 	if err != nil {
 		fmt.Println("Error in select")
@@ -39,8 +40,9 @@ func (m MealDaoImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 		var mealName string
 		var recipeName string
 		var id int
+		var mealId int
 		var amount int
-		rows.Scan(&mealName, &id, &amount, &recipeName)
+		rows.Scan(&mealName, &id, &amount, &mealId, &recipeName)
 		m, mealExists := haveMeal[mealName]
 
 		if mealExists {
@@ -48,6 +50,7 @@ func (m MealDaoImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 			m.Recipes = append(m.Recipes, recipe)
 		} else {
 			meal.Name = mealName
+			meal.ID = mealId
 			recipe := models.Recipe{Name: recipeName, Amount: amount}
 			meal.Recipes = append(meal.Recipes, recipe)
 			haveMeal[mealName] = &meal
@@ -65,20 +68,26 @@ func (m MealDaoImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.Meal
 	return meals
 }
 
-func (m MealDaoImpl) RemoveMeal(Meal models.Meal) {
-
+func (m MealDaoImpl) RemoveMeal(id int) error {
+	log.Printf("Removing meal with id of %d", id)
+	_, err := config.Conn.Exec(context.Background(), "delete from meal where id = $1", id)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
 }
 
 func (m MealDaoImpl) GetAllMeals() []models.Meal {
 	return nil
 }
 
-func (m MealDaoImpl) AddMeal(username string, meal models.Meal) int {
+func (m MealDaoImpl) AddMeal(username string, meal models.Meal) (int, error) {
 	var nameExists string
 	config.Conn.QueryRow(context.Background(), "select name from meal where name=$1", meal.Name).Scan(&nameExists)
 	if nameExists != "" {
-		fmt.Printf("Name %s exists\n", nameExists)
-		return -1
+		existsMsg := fmt.Sprintf("Meal %s exists\n", nameExists)
+		return -1, errors.New(existsMsg)
 	}
 
 	input := &s3.PutObjectInput{
@@ -107,5 +116,5 @@ func (m MealDaoImpl) AddMeal(username string, meal models.Meal) int {
 	if err != nil {
 		log.Println(err)
 	}
-	return id
+	return id, nil
 }

@@ -21,14 +21,22 @@ func (m MealServiceImpl) GetMeal(conn *pgx.Conn, findMeal models.Meal) []models.
 	return meals
 }
 
-func (m MealServiceImpl) RemoveMeal(meal models.Meal) {
+func (m MealServiceImpl) RemoveMeal(id int) error {
+	err := m.MealDao.RemoveMeal(id)
+	if err != nil {
+		return err
+	}
+	return err
 
 }
 func (m MealServiceImpl) GetAllMeals() []models.Meal {
 	return nil
 }
-func (m MealServiceImpl) AddMeal(user string, meal models.Meal) {
-	id := m.MealDao.AddMeal(user, meal)
+func (m MealServiceImpl) AddMeal(user string, meal models.Meal) error {
+	id, err := m.MealDao.AddMeal(user, meal)
+	if err != nil {
+		return err
+	}
 	recipeDao := dao.NewRecipeDAO()
 	recipeSVC := NewRecipeService(recipeDao)
 
@@ -37,4 +45,5 @@ func (m MealServiceImpl) AddMeal(user string, meal models.Meal) {
 		recipe.Meal_id = id
 		recipeSVC.AddRecipe(recipe)
 	}
+	return nil
 }
