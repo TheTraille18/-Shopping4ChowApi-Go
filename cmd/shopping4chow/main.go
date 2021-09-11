@@ -158,27 +158,6 @@ func addMeal(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
 	}
-
-	//var meal models.Meal
-	/*
-		if r.Method == "POST" {
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				http.Error(w, "Error reading request body",
-					http.StatusInternalServerError)
-			}
-			fmt.Printf("Body %s\n", string(body))
-
-			err = json.Unmarshal(body, &meal)
-			if err != nil {
-				log.Println(err)
-			}
-			log.Printf("Meal created %+v\n", meal)
-
-			mealSvc.AddMeal(meal)
-
-		}
-	*/
 }
 
 func removeMeal(w http.ResponseWriter, r *http.Request) {

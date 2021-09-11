@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"shopping4chow/cmd/shopping4chow/dao"
 	"shopping4chow/cmd/shopping4chow/models"
 
@@ -41,7 +40,7 @@ func (m MealServiceImpl) AddMeal(user string, meal models.Meal) error {
 	recipeSVC := NewRecipeService(recipeDao)
 
 	for _, recipe := range meal.Recipes {
-		fmt.Println(recipe)
+		recipe.SetUnits()
 		recipe.Meal_id = id
 		recipeSVC.AddRecipe(recipe)
 	}
